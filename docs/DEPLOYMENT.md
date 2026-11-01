@@ -23,7 +23,7 @@ readable message if something would make the deployment unusable, generates the 
 2. **Storage:** create an S3-compatible bucket (AWS S3 or Cloudflare R2) and set `STORAGE_DRIVER=s3` and the `S3_*` variables;
    local disk does not persist on Vercel.
 3. **Environment variables** (Project → Settings → Environment Variables, for Production): `DATABASE_URL` (pooled URL),
-   `DIRECT_URL` (non-pooled URL, used for migrations), `SESSION_SECRET`, `APP_URL` (your `https://….vercel.app` or custom
+   `DIRECT_URL` (non-pooled URL, used for migrations; with the Neon integration in Vercel this is provided as `DATABASE_URL_UNPOOLED` and is picked up automatically), `SESSION_SECRET`, `APP_URL` (your `https://….vercel.app` or custom
    domain), `MAIL_PROVIDER` + `MAIL_FROM` + `SMTP_*` or `RESEND_API_KEY`, `STORAGE_DRIVER=s3` + `S3_*`, optionally `ANTHROPIC_API_KEY`.
    Never set `DISABLE_RATE_LIMIT`.
 4. Push to GitHub, import the repository in Vercel (framework: Next.js; the build command is picked up from `vercel-build`).
