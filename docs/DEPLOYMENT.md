@@ -33,6 +33,11 @@ readable message if something would make the deployment unusable, generates the 
    `DATABASE_URL=<direct url> npm run make-admin -- you@example.com`.
 
 Things to know:
+- **Keep the functions next to the database.** `vercel.json` pins the serverless functions to `fra1` (Frankfurt), where the Neon
+  database was created. One "next question" runs about ten sequential queries, so a function in another continent adds
+  seconds per click. If the database is created in another region, change `regions` in `vercel.json` to the nearest Vercel
+  region (Singapore `sin1`, London `lhr1`, US East `iad1`). Neon's free tier also suspends an idle database after 5 minutes;
+  the first request afterwards waits 1-3 s.
 - **Schema changes after the first deploy:** run `npm run db:gen-postgres` and commit `prisma/postgres`. It leaves every applied
   migration untouched and adds one new migration with only the difference, which the next deploy applies.
   (Never edit or regenerate `0001_init` once a production database exists.)
