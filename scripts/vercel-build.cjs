@@ -5,7 +5,8 @@
 // Environment (Vercel → Project → Settings → Environment Variables):
 //   DATABASE_URL    required, postgresql://… (use the pooled URL, e.g. Neon "-pooler" host with ?pgbouncer=true)
 //   DIRECT_URL      optional but recommended: the non-pooled URL, used here for migrations and the seed
-//                   (the Neon integration in Vercel provides it as DATABASE_URL_UNPOOLED, which is used when DIRECT_URL is unset)
+//                   (the Neon integration in Vercel provides it as DATABASE_URL_UNPOOLED and POSTGRES_URL_NON_POOLING,
+//                   which are used, in that order, when DIRECT_URL is unset)
 //   SESSION_SECRET  required, >= 32 random characters
 //   see .env.example for APP_URL, MAIL_*, STORAGE_DRIVER=s3 and S3_*
 //   SKIP_SEED=1     skip the seed step
@@ -16,7 +17,7 @@ const root = path.join(__dirname, "..");
 const env = process.env;
 const fail = (msg) => { console.error(`\n[vercel-build] ${msg}\n`); process.exit(1); };
 const warn = (msg) => console.warn(`[vercel-build] WARNING: ${msg}`);
-const directUrl = env.DIRECT_URL || env.DATABASE_URL_UNPOOLED;
+const directUrl = env.DIRECT_URL || env.DATABASE_URL_UNPOOLED || env.POSTGRES_URL_NON_POOLING;
 
 if (!/^postgres(ql)?:\/\//i.test(env.DATABASE_URL ?? ""))
   fail("DATABASE_URL must be a PostgreSQL connection string. SQLite cannot run on Vercel (the filesystem is read-only and not shared between requests). Create a database (for example on Neon or Supabase) and set DATABASE_URL.");
