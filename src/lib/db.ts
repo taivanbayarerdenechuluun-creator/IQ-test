@@ -15,10 +15,31 @@ export function stripNul(v: unknown): unknown {
   return v; // Dates, Buffers, Prisma's own value objects, numbers, booleans, null
 }
 
+/**
+ * A pooled PostgreSQL URL (Neon "-pooler" host, or anything already marked pgbouncer) needs `pgbouncer=true` for Prisma and
+ * a connect timeout that survives a cold database. Hosting integrations hand out the pooled URL without those options and
+ * their variables cannot be edited, so they are added here when missing. Every other URL is returned unchanged.
+ */
+export function runtimeDatabaseUrl(url: string | undefined): string | undefined {
+  if (!url || !/^postgres(ql)?:\/\//i.test(url)) return url;
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return url;
+  }
+  if (!/-pooler\./i.test(u.hostname) && u.searchParams.get("pgbouncer") !== "true") return url;
+  if (!u.searchParams.has("pgbouncer")) u.searchParams.set("pgbouncer", "true");
+  if (!u.searchParams.has("connect_timeout")) u.searchParams.set("connect_timeout", "15");
+  return u.toString();
+}
+
 const g = globalThis as unknown as { prisma?: PrismaClient };
 
 function create(): PrismaClient {
-  const extended = new PrismaClient().$extends({
+  const configured = process.env.DATABASE_URL;
+  const url = runtimeDatabaseUrl(configured);
+  const extended = new PrismaClient(url && url !== configured ? { datasourceUrl: url } : undefined).$extends({
     query: {
       $allOperations({ model, args, query }) {
         return query(model ? (stripNul(args) as typeof args) : args);
