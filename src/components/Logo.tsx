@@ -5,9 +5,9 @@ export function LogoMark({ size = 32 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
       <defs>
         <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8B5CF6" />
-          <stop offset="0.6" stopColor="#3B82F6" />
-          <stop offset="1" stopColor="#22D3EE" />
+          <stop offset="0" stopColor="#925CFF" />
+          <stop offset="0.6" stopColor="#527BFF" />
+          <stop offset="1" stopColor="#39DDF2" />
         </linearGradient>
       </defs>
       <polygon points="20,3 35,12 35,28 20,37 5,28 5,12" fill="none" stroke="url(#lg)" strokeWidth="2.4" />

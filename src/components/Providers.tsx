@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
 import { dictionaries, type Key, type Lang } from "@/lib/i18n";
 import { localizeError } from "@/lib/server-errors";
 
@@ -65,7 +66,12 @@ export function Providers({ children }: { children: ReactNode }) {
 
   const te = useCallback((msg: string) => localizeError(msg, lang), [lang]);
 
-  return <C.Provider value={{ theme, toggleTheme, lang, setLang, t, tt, te }}>{children}</C.Provider>;
+  // reducedMotion="user": every framer-motion animation drops its movement when the OS asks for less motion.
+  return (
+    <C.Provider value={{ theme, toggleTheme, lang, setLang, t, tt, te }}>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+    </C.Provider>
+  );
 }
 
 export function useApp() {

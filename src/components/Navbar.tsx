@@ -49,7 +49,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="glass fixed inset-x-0 top-0 z-50 border-x-0 border-t-0">
+    <header className="glass fixed inset-x-0 top-0 z-50 border-x-0 border-t-0 after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-px after:bg-gradient-to-r after:from-transparent after:via-violet/60 after:to-transparent">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6" aria-label={tt("Main", "Үндсэн")}>
         <Logo />
         <ul className="hidden items-center gap-6 text-sm text-muted lg:flex">

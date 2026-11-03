@@ -4,6 +4,8 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SiteBanners, StatusProvider } from "@/components/SiteChrome";
 import { SkipLink, TitleSync } from "@/components/PageChrome";
+import { Atmosphere } from "@/components/Atmosphere";
+import { Interactions } from "@/components/Interactions";
 
 const inter = Inter({ subsets: ["latin", "cyrillic", "cyrillic-ext"], variable: "--font-inter", display: "swap" });
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk", display: "swap" });
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080b16",
+  themeColor: "#080b18",
   width: "device-width",
   initialScale: 1,
 };
@@ -36,9 +38,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <Atmosphere />
         <Providers>
           <SkipLink />
           <TitleSync />
+          <Interactions />
           <StatusProvider>
             {children}
             <SiteBanners />

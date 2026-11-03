@@ -6,7 +6,7 @@ import { useApp } from "./Providers";
 export function Footer() {
   const { t } = useApp();
   return (
-    <footer className="border-t border-line bg-deep">
+    <footer className="relative border-t border-line bg-[var(--band)] before:pointer-events-none before:absolute before:inset-x-0 before:-top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-violet/50 before:to-transparent">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr]">
         <div>
           <Logo />

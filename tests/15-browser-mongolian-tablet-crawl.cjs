@@ -42,7 +42,10 @@ async function login(p, email) {
   await Promise.all([p.waitForNavigation({ waitUntil: "networkidle0" }), p.click("button.btn-primary")]);
 }
 
-const open = async (p, path) => { await p.goto(B + path, { waitUntil: "networkidle0" }); await sleep(450); }; // the page fade lasts 180 ms
+const open = async (p, path) => { // the page fade lasts 180 ms
+  try { await p.goto(B + path, { waitUntil: "networkidle0" }); } catch (e) { e.message += ` (while opening ${path} at ${p.viewport()?.width}px)`; throw e; }
+  await sleep(450);
+};
 
 // ---------- English left behind in the Mongolian interface ----------
 const ALLOW = ["INTELLIQ", "IQ", "PDF", "CSV", "XP", "AI", "FAQ", "PNG", "JPEG", "WebP", "GIF", "KB", "MB", "Ulzii Browser", "Ulzii", "WCAG", "A/AA"];

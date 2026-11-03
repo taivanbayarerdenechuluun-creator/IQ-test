@@ -1,73 +1,134 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect } from "react";
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
+import { BrainCircuit, MemoryStick, Zap } from "lucide-react";
+import { useApp } from "../Providers";
 
-const NODES = [
-  [200, 40], [340, 120], [340, 280], [200, 360], [60, 280], [60, 120],
-  [200, 130], [275, 200], [200, 270], [125, 200],
+// Two mirrored "hemispheres" of nodes joined by a central axis: an abstract, brain-inspired network.
+const LEFT: [number, number][] = [[170, 138], [112, 200], [134, 282], [202, 336], [208, 214], [168, 252], [214, 150]];
+const RIGHT = LEFT.map(([x, y]) => [520 - x, y] as [number, number]);
+const HUB: [number, number][] = [[260, 196], [260, 268], [260, 330]];
+const NODES = [...LEFT, ...RIGHT, ...HUB]; // 0-6 left, 7-13 right, 14-16 axis
+const HEMI: [number, number][] = [[0, 1], [1, 2], [2, 3], [0, 6], [6, 4], [4, 5], [5, 3], [1, 4], [2, 5], [0, 4]];
+const EDGES: [number, number][] = [
+  ...HEMI,
+  ...HEMI.map(([a, b]) => [a + 7, b + 7] as [number, number]),
+  [4, 14], [11, 14], [5, 15], [12, 15], [3, 16], [10, 16], [14, 15], [15, 16], [6, 14], [13, 14],
 ];
-const EDGES = [[0, 6], [1, 7], [2, 7], [3, 8], [4, 9], [5, 9], [6, 7], [7, 8], [8, 9], [9, 6], [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]];
-const DIGITS = [
-  { v: "3", x: "6%", y: "12%", d: 0 },
-  { v: "7", x: "88%", y: "18%", d: 1 },
-  { v: "11", x: "92%", y: "66%", d: 2 },
-  { v: "18", x: "4%", y: "72%", d: 1.5 },
-  { v: "29", x: "50%", y: "-2%", d: 0.5 },
-  { v: "47", x: "52%", y: "96%", d: 2.5 },
+const TONES = ["--blue", "--violet", "--cyan", "--mag", "--lav"];
+
+const orbit = (r: number, deg: number): [number, number] => [
+  Number((260 + r * Math.cos((deg * Math.PI) / 180)).toFixed(1)),
+  Number((260 + r * Math.sin((deg * Math.PI) / 180)).toFixed(1)),
+];
+
+const SYMBOLS = [
+  { v: "∑", x: "7%", y: "14%", d: 0 },
+  { v: "π", x: "86%", y: "10%", d: 1.2 },
+  { v: "∞", x: "93%", y: "58%", d: 2.1 },
+  { v: "√", x: "3%", y: "66%", d: 1.6 },
+  { v: "29", x: "47%", y: "-3%", d: 0.6 },
+  { v: "÷", x: "80%", y: "90%", d: 2.6 },
+  { v: "7", x: "20%", y: "94%", d: 0.9 },
 ];
 
 export function HeroVisual() {
-  const reduce = useReducedMotion();
+  const { tt } = useApp();
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 55, damping: 18 });
+  const sy = useSpring(my, { stiffness: 55, damping: 18 });
+  // Three depth layers move by different amounts with the pointer; the whole visual drifts up slightly on scroll.
+  const backX = useTransform(sx, (v) => v * -12), backY = useTransform(sy, (v) => v * -12);
+  const midX = useTransform(sx, (v) => v * 16), midY = useTransform(sy, (v) => v * 16);
+  const frontX = useTransform(sx, (v) => v * 34), frontY = useTransform(sy, (v) => v * 34);
+  const { scrollY } = useScroll();
+  const lift = useTransform(scrollY, [0, 700], [0, -64]);
+
+  useEffect(() => {
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const move = (e: PointerEvent) => {
+      mx.set(e.clientX / window.innerWidth - 0.5);
+      my.set(e.clientY / window.innerHeight - 0.5);
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => window.removeEventListener("pointermove", move);
+  }, [mx, my]);
+
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[460px]" aria-hidden="true">
-      <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.35),transparent_65%)] blur-2xl" />
-      {DIGITS.map((d) => (
-        <span
-          key={d.v}
-          className="float absolute font-display text-xl font-semibold text-cyan-fg/70"
-          style={{ left: d.x, top: d.y, animationDelay: `${d.d}s` }}
-        >
-          {d.v}
-        </span>
-      ))}
-      <svg viewBox="0 0 400 400" className="relative h-full w-full">
+    <motion.div style={{ y: lift }} className="relative mx-auto aspect-square w-full max-w-[500px]" aria-hidden="true">
+      {/* the core's light */}
+      <div className="absolute inset-[14%] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--violet)_55%,transparent),color-mix(in_srgb,var(--blue)_22%,transparent)_45%,transparent_70%)]" />
+
+      {/* back layer: orbits */}
+      <motion.svg style={{ x: backX, y: backY }} viewBox="0 0 520 520" className="absolute inset-0 h-full w-full">
         <defs>
-          <linearGradient id="hv" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#8B5CF6" />
-            <stop offset="0.55" stopColor="#3B82F6" />
-            <stop offset="1" stopColor="#22D3EE" />
+          <linearGradient id="hv-ring" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="480" y2="480">
+            <stop offset="0" style={{ stopColor: "var(--blue)" }} />
+            <stop offset="0.5" style={{ stopColor: "var(--violet)" }} />
+            <stop offset="1" style={{ stopColor: "var(--cyan)" }} />
           </linearGradient>
         </defs>
-        <motion.g
-          style={{ transformOrigin: "200px 200px" }}
-          animate={reduce ? undefined : { rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
-        >
-          <circle cx="200" cy="200" r="185" fill="none" stroke="url(#hv)" strokeOpacity="0.25" strokeDasharray="2 10" />
-        </motion.g>
-        <motion.g
-          style={{ transformOrigin: "200px 200px" }}
-          animate={reduce ? undefined : { rotate: -360 }}
-          transition={{ duration: 140, repeat: Infinity, ease: "linear" }}
-        >
-          <polygon points="200,40 340,120 340,280 200,360 60,280 60,120" fill="none" stroke="url(#hv)" strokeOpacity="0.5" />
-        </motion.g>
-        {EDGES.map(([a, b], i) => (
-          <motion.line
-            key={i}
-            x1={NODES[a][0]} y1={NODES[a][1]} x2={NODES[b][0]} y2={NODES[b][1]}
-            stroke="url(#hv)" strokeWidth="1.2" strokeOpacity="0.6"
-            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-            transition={{ duration: 1.4, delay: 0.1 * i }}
-          />
+        <g className="spin-ccw" style={{ animationDuration: "70s" }}>
+          <circle cx="260" cy="260" r="104" fill="none" stroke="url(#hv-ring)" strokeOpacity=".5" strokeDasharray="2 9" strokeLinecap="round" />
+          {[20, 140, 260].map((a) => { const [x, y] = orbit(104, a); return <circle key={a} cx={x} cy={y} r="4.5" style={{ fill: "var(--cyan)" }} />; })}
+        </g>
+        <g className="spin-cw" style={{ animationDuration: "110s" }}>
+          <circle cx="260" cy="260" r="158" fill="none" stroke="url(#hv-ring)" strokeOpacity=".4" />
+          {[0, 72, 144, 216, 288].map((a) => { const [x, y] = orbit(158, a); return <circle key={a} cx={x} cy={y} r="5" style={{ fill: "var(--mag)" }} />; })}
+        </g>
+        <g className="spin-ccw" style={{ animationDuration: "170s" }}>
+          <circle cx="260" cy="260" r="214" fill="none" stroke="url(#hv-ring)" strokeOpacity=".28" strokeDasharray="1 7" strokeLinecap="round" />
+          {[45, 165, 285].map((a) => { const [x, y] = orbit(214, a); return <circle key={a} cx={x} cy={y} r="3.5" style={{ fill: "var(--lav)" }} />; })}
+        </g>
+      </motion.svg>
+
+      {/* middle layer: the network */}
+      <motion.svg style={{ x: midX, y: midY }} viewBox="0 0 520 520" className="absolute inset-0 h-full w-full">
+        <defs>
+          <linearGradient id="hv-edge" gradientUnits="userSpaceOnUse" x1="100" y1="120" x2="420" y2="380">
+            <stop offset="0" style={{ stopColor: "var(--blue)" }} />
+            <stop offset="0.5" style={{ stopColor: "var(--violet)" }} />
+            <stop offset="1" style={{ stopColor: "var(--mag)" }} />
+          </linearGradient>
+        </defs>
+        <g transform="translate(0 22)">
+          {EDGES.map(([a, b], i) => (
+            <g key={i}>
+              <line x1={NODES[a][0]} y1={NODES[a][1]} x2={NODES[b][0]} y2={NODES[b][1]} stroke="url(#hv-edge)" strokeWidth="1.3" strokeOpacity=".5" />
+              <line className="flow" style={{ animationDelay: `${(i % 7) * -0.45}s` }} x1={NODES[a][0]} y1={NODES[a][1]} x2={NODES[b][0]} y2={NODES[b][1]} stroke="url(#hv-edge)" strokeWidth="2" strokeLinecap="round" strokeOpacity=".9" />
+            </g>
+          ))}
+          {NODES.map(([x, y], i) => {
+            const hub = i >= 14;
+            const r = hub ? 9 : i % 3 === 0 ? 7 : 5.5;
+            const tone = `var(${TONES[i % TONES.length]})`;
+            return (
+              <g key={i}>
+                <circle className="twinkle" style={{ fill: tone, transformBox: "fill-box", transformOrigin: "center", animationDelay: `${(i % 6) * 0.7}s`, animationDuration: `${4 + (i % 4)}s` }} cx={x} cy={y} r={r * 2.8} fillOpacity=".16" />
+                <circle cx={x} cy={y} r={r} style={{ fill: tone }} />
+                {hub && <circle cx={x} cy={y} r={r} fill="none" strokeWidth="1.5" style={{ stroke: tone, transformBox: "fill-box", transformOrigin: "center", animation: `pulse-ring 3.2s ${(i - 14) * 0.8}s ease-out infinite` }} />}
+              </g>
+            );
+          })}
+        </g>
+      </motion.svg>
+
+      {/* front layer: symbols and domain chips */}
+      <motion.div style={{ x: frontX, y: frontY }} className="absolute inset-0">
+        {SYMBOLS.map((s) => (
+          <span key={s.v} className="float absolute font-display text-2xl font-semibold text-lav/70" style={{ left: s.x, top: s.y, animationDelay: `${s.d}s` }}>{s.v}</span>
         ))}
-        {NODES.map(([x, y], i) => (
-          <motion.circle
-            key={i} cx={x} cy={y} r={i < 6 ? 6 : 8} fill="url(#hv)"
-            animate={reduce ? undefined : { r: [i < 6 ? 6 : 8, i < 6 ? 8 : 11, i < 6 ? 6 : 8], opacity: [0.8, 1, 0.8] }}
-            transition={{ duration: 3 + (i % 3), repeat: Infinity, delay: i * 0.3 }}
-          />
-        ))}
-      </svg>
-    </div>
+        <span className="glass float absolute left-[2%] top-[30%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium" style={{ animationDelay: "0.4s" }}>
+          <BrainCircuit size={14} className="text-cyan-fg" />{tt("Logic", "Логик")}
+        </span>
+        <span className="glass float absolute right-[0%] top-[52%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium" style={{ animationDelay: "1.7s" }}>
+          <MemoryStick size={14} className="text-violet-fg" />{tt("Memory", "Ой")}
+        </span>
+        <span className="glass float absolute bottom-[12%] left-[12%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium" style={{ animationDelay: "2.5s" }}>
+          <Zap size={14} className="text-lav" />{tt("Speed", "Хурд")}
+        </span>
+      </motion.div>
+    </motion.div>
   );
 }
